@@ -171,6 +171,13 @@ def processCommand(client, commandType, commandValue, username, password, rootNa
     elif commandType == 'STRU':
         client.send(bytes('225 querying file structure', 'ascii'))
         fileStructure(rootName)
+    elif commandType == 'PORT':
+        h1,h2,h3,h4,transfPort1,transfPort2 = commandValue.split(',')
+        transfHost = h1 + '.' + h2 + '.' + h3 + '.' + h4
+        UP = (transfHost,transfPort1)
+        DOWN = (transfHost,transfPort2)
+        upStream = socket(AF_INET,SOCK_STREAM)
+        downStream = socket(AF_INET,SOCK_STREAM)
     else:
         client.send(bytes('502 command not implemented','ascii'))
 
