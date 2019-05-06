@@ -2,6 +2,8 @@
 from socket import *
 from codecs import decode
 from threading import Thread
+import pickle
+import os, os.path
 
 #for the database
 import mysql.connector
@@ -26,7 +28,7 @@ def main():
 
 
     HOST = 'localhost'
-    PORT = 12003
+    PORT = 12000
 
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
@@ -61,7 +63,8 @@ def clientHandler (client):
     isPassword = False
     password = ''
     command = ''
-
+    rootName = ''
+    fileType = 'rb'
     while True:
         message = decode(client.recv(BUFFERSIZE), 'ascii')
 
@@ -82,8 +85,11 @@ def clientHandler (client):
                     username = commandValue
             elif isPassword == False:
                 isPassword = passwordConfirmation(client, commandType, commandValue, username)
+                if isPassword == True:
+                    rootName = rootNamer(username)
+                    print('current working directory ', os.getcwd())
             elif isUsername == True and isPassword == True:
-                processCommand(client, commandType, commandValue)
+                processCommand(client, commandType, commandValue, username, password, rootName, fileType)
 
             #processCommand(client, commandType, commandValue)
 
@@ -103,9 +109,7 @@ def extractValue(command):
     else:
         return commandValue
 
-def processCommand(client, commandType, commandValue):
-    message = commandType + ' ' + commandValue
-    client.send(bytes(message,'ascii'))
+
 
 def userNameConfirmation(client, commandType, commandValue):
     if commandType != 'USER':
@@ -141,10 +145,103 @@ def passwordConfirmation(client, commandType, commandValue, username):
             client.send(bytes('530 Not logged in.','ascii'))
             return False
         elif result[0][0] == 1:
-            print('the result ', result)
             client.send(bytes('230 User logged in, proceed.','ascii'))
             return True
 
+def rootNamer(username):
+    cursor = mydb.cursor()
+    sql = "select root from user where name = '%s'" % (username)
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    return result[0]
+
+def processCommand(client, commandType, commandValue, username, password, rootName, fileType):
+    message = commandType + ' ' + commandValue
+    if commandType == 'NOOP':
+        client.send(bytes('200 OK', 'ascii'))
+    elif commandType == 'STOR':
+        if os.path.exists(os.getcwd() + os.sep + rootName +os.sep +commandValue):
+            client.send(bytes('125 Data connection already open; transfer starting.', 'ascii'))
+            transferFile(rootName, commandValue, fileType)
+        else :
+            client.send(bytes('450 file not found', 'ascii'))
+    elif commandType == 'RETR':
+        client.send(bytes('502 command not implemented','ascii'))
+        #receiveFile(rootName, commandValue, fileType)
+    elif commandType == 'STRU':
+        client.send(bytes('225 querying file structure', 'ascii'))
+        fileStructure(rootName)
+    else:
+        client.send(bytes('502 command not implemented','ascii'))
+
+
+
+def transferFile(dirName, fileName, fileType):
+    HOST = 'localhost'
+    PORT = 13000
+    BUFFERSIZE = 1024
+    ADDRESS = (HOST,PORT)
+    CODE = 'ascii'
+    server = socket(AF_INET,SOCK_STREAM)
+    server.bind(ADDRESS)
+    server.listen(5)
+    client, address = server.accept()
+    theFile = dirName + os.sep + fileName
+
+    f = open(theFile,'rb')
+    while True:
+        l = f.read(BUFFERSIZE)
+        while (l):
+            client.send(l)
+            l = f.read(BUFFERSIZE)
+        if not l:
+            f.close()
+            client.close()
+            break
+
+def fileStructure(rootName):
+
+    HOST = 'localhost'
+    PORT = 14000
+    BUFFERSIZE = 1024
+    ADDRESS = (HOST,PORT)
+    CODE = 'ascii'
+    server = socket(AF_INET,SOCK_STREAM)
+    server.bind(ADDRESS)
+    server.listen(5)
+    client, address = server.accept()
+
+    for root, dirs, files in os.walk("." + os.sep + rootName):
+        for filename in files:
+            client.send(bytes(filename,'ascii'))
+            print(filename)
+    client.close()
+
+
+'''
+def receiveFile(dirName, fileName, fileType):
+    HOST = 'localhost'
+    PORT = 15000
+
+    ADDRESS = (HOST,PORT)
+    CODE = 'ascii'
+    server = socket(AF_INET,SOCK_STREAM)
+    server.bind(ADDRESS)
+    server.listen(5)
+    client, address = server.accept()
+
+    theUser = os.getcwd() + os.sep + dirName + os.sep + fileName
+
+    with open(theUser, 'wb') as f:
+
+        while True:
+        	data = client.recv(BUFFERSIZE)
+        	if not data:
+        		f.close()
+        		break
+        	f.write(data)
+        print('file received')
+    '''
 
 if __name__ == '__main__':
     main()
