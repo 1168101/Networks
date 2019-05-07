@@ -1,6 +1,7 @@
 from socket import *
 from codecs import decode
 import pickle
+import os, os.path
 
 import time
 
@@ -81,10 +82,15 @@ def responseHandler(server, command, CODE, BUFFERSIZE, fileType):
 		print(responseCode)
 		fileName = extractValue(command)
 		receiveFile(fileName, fileType, BUFFERSIZE)
-	elif responseCode == '205':
+	elif responseCode == '150':
 		print(responseCode)
 		fileName = extractValue(command)
-		#transferFile(fileName, fileType, BUFFERSIZE)
+		if os.path.exists(os.getcwd()+os.sep + fileName):
+			fileName = extractValue(command)
+			serverIP = server.getpeername()[0]
+			transferFile(fileName, fileType, BUFFERSIZE,serverIP)
+		else :
+			print(os.getcwd() + os.sep +fileName,'does not exist')
 	elif responseCode == '225':
 		fileStructure()
 
@@ -111,27 +117,30 @@ def receiveFile(fileName, fileType, BUFFERSIZE):
 			f.write(data)
 		print('file received')
 
-'''
-def transferFile(fileName, fileType, BUFFERSIZE):
-	HOST = 'localhost'
+
+def transferFile(fileName, fileType, BUFFERSIZE,serverIP):
+	HOST = serverIP
 	PORT = 15000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
 	server = socket(AF_INET, SOCK_STREAM)
-	server.connect(ADDRESS)
+	#server.connect(ADDRESS)
+	server.bind(ADDRESS)
+	server.listen(5)
+	client,address = server.accept()
 
 	f = open(fileName,'rb')
 	while True:
 	    l = f.read(BUFFERSIZE)
 	    while (l):
-	        server.send(l)
-	        l = f.read(BUFFERSIZE)
+		    client.send(l)
+		    l = f.read(BUFFERSIZE)
 	    if not l:
 	        f.close()
-	        server.close()
+	        client.close()
 	        break
 	print('sent ')
-'''
+
 def extractValue(command):
     commandValue = ''
 

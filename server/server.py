@@ -180,9 +180,10 @@ def processCommand(client, commandType, commandValue, username, password, rootNa
             #print(os.getcwd() + os.sep + rootName +os.sep +commandValue,'does not exist')
             client.send(bytes('450 file not found', 'ascii'))
     elif commandType == 'STOR':
-        client.send(bytes('502 command not implemented','ascii'))
-        #clientIP = client.getpeername()[0]
-        #receiveFile(rootName, commandValue, fileType)
+        #client.send(bytes('502 command not implemented','ascii'))
+        client.send(bytes('150 File status okay; about to open data connection.','ascii'))
+        clientIP = client.getpeername()[0]
+        receiveFile(rootName, commandValue, fileType,clientIP)
     elif commandType == 'STRU':
         client.send(bytes('225 querying file structure', 'ascii'))
         clientIP = client.getpeername()[0]
@@ -238,7 +239,7 @@ def fileStructure(rootName,clientIP):
     client.close()
 
 
-'''
+
 def receiveFile(dirName, fileName, fileType,clientIP):
     HOST = clientIP
     PORT = 15000
@@ -262,7 +263,7 @@ def receiveFile(dirName, fileName, fileType,clientIP):
         		break
         	f.write(data)
         print('file received')
-'''
+
 
 if __name__ == '__main__':
     main()
