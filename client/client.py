@@ -87,8 +87,7 @@ def responseHandler(server, command, CODE, BUFFERSIZE, fileType):
 		fileName = extractValue(command)
 		if os.path.exists(os.getcwd()+os.sep + fileName):
 			fileName = extractValue(command)
-			serverIP = server.getpeername()[0]
-			transferFile(fileName, fileType, BUFFERSIZE,serverIP)
+			transferFile(fileName, fileType, BUFFERSIZE)
 		else :
 			print(os.getcwd() + os.sep +fileName,'does not exist')
 	elif responseCode == '225':
@@ -118,8 +117,8 @@ def receiveFile(fileName, fileType, BUFFERSIZE):
 		print('file received')
 
 
-def transferFile(fileName, fileType, BUFFERSIZE,serverIP):
-	HOST = serverIP
+def transferFile(fileName, fileType, BUFFERSIZE):
+	HOST = ''
 	PORT = 15000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
