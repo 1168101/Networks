@@ -27,12 +27,14 @@ if mydb:
 def main():
 
 
-    HOST = 'localhost'
+    HOST = ''
     PORT = 12000
 
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
     server = socket(AF_INET,SOCK_STREAM)
+    IP=getIP()
+    print('HOST address:',IP,' port:',PORT)
     server.bind(ADDRESS)
     server.listen(5)
     print('Waiting for client connection...')
@@ -43,6 +45,16 @@ def main():
         handler = myThread(client)
         handler.start()
 
+def getIP():
+    s = socket(AF_INET,SOCK_DGRAM)
+    try:
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 class myThread (Thread):
     def __init__(self, client):
@@ -87,7 +99,7 @@ def clientHandler (client):
                 isPassword = passwordConfirmation(client, commandType, commandValue, username)
                 if isPassword == True:
                     rootName = rootNamer(username)
-                    print('current working directory ', os.getcwd())
+                    print('current working directory ', rootName)
             elif isUsername == True and isPassword == True:
                 processCommand(client, commandType, commandValue, username, password, rootName, fileType)
 
@@ -159,40 +171,39 @@ def processCommand(client, commandType, commandValue, username, password, rootNa
     message = commandType + ' ' + commandValue
     if commandType == 'NOOP':
         client.send(bytes('200 OK', 'ascii'))
-    elif commandType == 'STOR':
+    elif commandType == 'RETR':
         if os.path.exists(os.getcwd() + os.sep + rootName +os.sep +commandValue):
             client.send(bytes('125 Data connection already open; transfer starting.', 'ascii'))
-            transferFile(rootName, commandValue, fileType)
+            clientIP = client.getpeername()[0]
+            transferFile(rootName, commandValue, fileType,clientIP)
         else :
+            #print(os.getcwd() + os.sep + rootName +os.sep +commandValue,'does not exist')
             client.send(bytes('450 file not found', 'ascii'))
-    elif commandType == 'RETR':
+    elif commandType == 'STOR':
         client.send(bytes('502 command not implemented','ascii'))
+        #clientIP = client.getpeername()[0]
         #receiveFile(rootName, commandValue, fileType)
     elif commandType == 'STRU':
         client.send(bytes('225 querying file structure', 'ascii'))
-        fileStructure(rootName)
-    elif commandType == 'PORT':
-        h1,h2,h3,h4,transfPort1,transfPort2 = commandValue.split(',')
-        transfHost = h1 + '.' + h2 + '.' + h3 + '.' + h4
-        UP = (transfHost,transfPort1)
-        DOWN = (transfHost,transfPort2)
-        upStream = socket(AF_INET,SOCK_STREAM)
-        downStream = socket(AF_INET,SOCK_STREAM)
+        clientIP = client.getpeername()[0]
+        fileStructure(rootName,clientIP)
     else:
         client.send(bytes('502 command not implemented','ascii'))
 
 
 
-def transferFile(dirName, fileName, fileType):
-    HOST = 'localhost'
+def transferFile(dirName, fileName, fileType,clientIP):
+    HOST = clientIP
     PORT = 13000
     BUFFERSIZE = 1024
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    server = socket(AF_INET,SOCK_STREAM)
-    server.bind(ADDRESS)
-    server.listen(5)
-    client, address = server.accept()
+    #server = socket(AF_INET,SOCK_STREAM)
+    #server.bind(ADDRESS)
+    #server.listen(5)
+    #client, address = server.accept()
+    client = socket(AF_INET,SOCK_STREAM)
+    client.connect(ADDRESS)
     theFile = dirName + os.sep + fileName
 
     f = open(theFile,'rb')
@@ -206,17 +217,19 @@ def transferFile(dirName, fileName, fileType):
             client.close()
             break
 
-def fileStructure(rootName):
+def fileStructure(rootName,clientIP):
 
-    HOST = 'localhost'
+    HOST = clientIP
     PORT = 14000
     BUFFERSIZE = 1024
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    server = socket(AF_INET,SOCK_STREAM)
-    server.bind(ADDRESS)
-    server.listen(5)
-    client, address = server.accept()
+    #server = socket(AF_INET,SOCK_STREAM)
+    client = socket(AF_INET,SOCK_STREAM)
+    client.connect(ADDRESS)
+    #server.bind(ADDRESS)
+    #server.listen(5)
+    #client, address = server.accept()
 
     for root, dirs, files in os.walk("." + os.sep + rootName):
         for filename in files:
@@ -226,17 +239,18 @@ def fileStructure(rootName):
 
 
 '''
-def receiveFile(dirName, fileName, fileType):
-    HOST = 'localhost'
+def receiveFile(dirName, fileName, fileType,clientIP):
+    HOST = clientIP
     PORT = 15000
 
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    server = socket(AF_INET,SOCK_STREAM)
-    server.bind(ADDRESS)
-    server.listen(5)
-    client, address = server.accept()
-
+    #server = socket(AF_INET,SOCK_STREAM)
+    #server.bind(ADDRESS)
+    #server.listen(5)
+    #client, address = server.accept()
+    client = socket(AF_INET,SOCK_STREAM)
+    client.connect(ADDRESS)
     theUser = os.getcwd() + os.sep + dirName + os.sep + fileName
 
     with open(theUser, 'wb') as f:
@@ -248,7 +262,7 @@ def receiveFile(dirName, fileName, fileType):
         		break
         	f.write(data)
         print('file received')
-    '''
+'''
 
 if __name__ == '__main__':
     main()

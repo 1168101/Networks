@@ -5,11 +5,13 @@ import pickle
 import time
 
 
+
 def main():
 	HOST = 'localhost'
 	PORT = 12000
 	BUFFERSIZE = 1024
-	ADDRESS = (HOST,PORT)
+	#ADDRESS = (HOST,PORT)
+	ADDRESS = connectionHandler()
 	CODE = 'ascii'
 	fileType = 'wb'
 	user = False
@@ -18,7 +20,23 @@ def main():
 	print(decode(server.recv(BUFFERSIZE),CODE))
 	serverHandler(server, CODE, BUFFERSIZE, fileType)
 
-
+def connectionHandler():
+	while True:
+		command = input('Enter PORT information: \n')
+		while len(command) == 0:
+			command = input('Enter valid PORT command: \n')
+		commandType = command[0:4]
+		commandValue = extractValue(command)
+		if command == 'quit':
+			break
+		if commandType == 'port':
+			h1,h2,h3,h4,p1,p2 = commandValue.split(',')
+			PORT1 = int(p1)
+			PORT2 = int(p2)
+			HOST = h1 + '.' + h2 + '.' + h3 + '.' + h4
+			ADDRESS = (HOST,PORT1)
+			return ADDRESS
+			break
 
 def serverHandler(server, CODE, BUFFERSIZE, fileType):
 	while True:
@@ -73,16 +91,20 @@ def responseHandler(server, command, CODE, BUFFERSIZE, fileType):
 
 
 def receiveFile(fileName, fileType, BUFFERSIZE):
-	HOST = 'localhost'
+	HOST = ''
 	PORT = 13000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
 	server = socket(AF_INET, SOCK_STREAM)
-	server.connect(ADDRESS)
+	#server.connect(ADDRESS)
+	server.bind(ADDRESS)
+	server.listen(5)
+	client,address = server.accept()
 	with open(fileName, 'wb') as f:
 
 		while True:
-			data = server.recv(BUFFERSIZE)
+			#data = server.recv(BUFFERSIZE)
+			data = client.recv(BUFFERSIZE)
 			if not data:
 				f.close()
 				break
@@ -121,17 +143,19 @@ def extractValue(command):
         return commandValue
 
 def fileStructure():
-	HOST = 'localhost'
+	HOST = ''
 	PORT = 14000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
 	server = socket(AF_INET, SOCK_STREAM)
-	server.connect(ADDRESS)
+	server.bind(ADDRESS)
+	server.listen(5)
+	client,address = server.accept()
 
 	recvd_data = []
 
 	while True:
-		data = decode(server.recv(BUFFERSIZE),'ascii')
+		data = decode(client.recv(BUFFERSIZE),'ascii')
 
 		if not data:
 			break
