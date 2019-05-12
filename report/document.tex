@@ -525,14 +525,25 @@ After a client connects to the server, the server then requires the user name, t
 
 
 \section{Testing and Results}
-Wireshark was used to monitor the packets sent and received between two computers, one running the client and the other running the server. The TCP \texttt{SYNACK} messages were clearly visible and clear-text of command codes, reply codes, user names and passwords, and even binary file data were viewed without difficulty as shown in Figure \ref{Wirename}. Refer to Appendix \ref{appndx} for further images of the Wireshark capture.
-
-\begin{figure*}[hbtp!]
+Wireshark was used to monitor the packets sent and received between two computers, one running the client and the other running the server. The TCP \texttt{SYNACK} messages were clearly visible and clear-text of command codes, reply codes (see Figure \ref{wirecodes}), user names and passwords (see Figure \ref{wirenames}), and even binary file data were viewed without difficulty as shown in Figure \ref{wiredata}. Refer to Appendix \ref{appndx} for full, un-cropped images of the Wireshark capture.
+\begin{figure}[hbtp!]
 	\centering
-	\includegraphics[width = 0.9\textwidth]{wireshark3}
+	\includegraphics[scale = 3.0]{wirecodes}
+	\caption{Wireshark screen capture showing the clear-text of a received message}
+	\label{wirecodes}
+\end{figure}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[scale = 3.0]{wirenames}
 	\caption{Wireshark screen capture showing the clear-text of a username sent to the server}
-	\label{Wirename}
-\end{figure*}
+	\label{wirenames}
+\end{figure}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[scale = 2.0]{wiredata}
+	\caption{Wireshark screen capture showing the clear-text of a file being transferred through the data connection}
+	\label{wiredata}
+\end{figure}
 
 
 We can draw a conclusion from this that FTP is not secure and can easily breached. This is because FTP pre-dates SLL and TLS. As demonstrated, FTP is vulnerable to ``Packet Capture". Some of the other vulnerabilities of FTP are outlined in Reference~\cite{rfc2557} include:
@@ -585,19 +596,26 @@ A file transfer protocol program was successfully written using python 3 socket 
 \begin{figure}[hbtp!]
 	\centering
 	\includegraphics[width = 0.9\textwidth]{wireshark2}
-	\caption{Wireshark screen capture showing the IP addresses of the two hosts}
-	\label{w1}
+	\caption{Wireshark screen capture showing the IP addresses of the two hosts and TCP packets transferred}
+	\label{wireshark1}
+\end{figure}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[width = 0.9\textwidth]{wireshark3}
+	\caption{Wireshark screen capture showing the clear-text of a username sent to the server}
+	\label{wireshark2}
 \end{figure}
 \begin{figure}[hbtp!]
 	\centering
 	\includegraphics[width = 0.9\textwidth]{wireshark1}
 	\caption{Wireshark screen capture showing the clear-text of a received message}
+	\label{wireshark3}
 \end{figure}
 \begin{figure}[hbtp!]
 	\centering
 	\includegraphics[width = 0.9\textwidth]{wireshark4}
 	\caption{Wireshark screen capture showing the clear-text of a file being transferred through the data connection}
-	\label{w4}
+	\label{wireshark4}
 \end{figure}
 %{\tiny \vfill \hfill \today \hspace{5mm} witseie-paper-2003.\TeX}
 
