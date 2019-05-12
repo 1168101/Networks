@@ -206,7 +206,7 @@
 \renewcommand{\indent}{\hspace*{\tindent}}
 
 \begin{abstract}
-	An FTP program was implemented in python 3 using socket programming and TCP/IP connections. 
+A terminal-based FTP client-server program was designed, implemented and tested. The program consists of a client program, server program and MySQL database. The FTP program was successfully implemented. It does not fully implement all basic FTP commands due to the fact that some of python's features, the language used to make the FTP program, leave them redundant. It is suggested that as an improvement, the program should be able to interact with FileZilla and should have a help feature.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,7 +226,7 @@ FTP is an RFC959 \cite{rfc959} standardised file sharing~(or file transferring) 
 \end{figure}
 
 
-FTP is built on TCP/IP, and is therefore a reliable connection protocol. This project uses socket programming in order to implement FTP. Sockets can be viewed as the \textit{door} connecting the application and transport layers, as seen in Fig~\ref{socket}. The socket programs which are used to make the protocol use TCP and IP which is beyond the scope of this project and will not be discussed in detail since they belong to the transport and internet layers respectively \cite{cn}.
+FTP is built on TCP/IP, and is therefore a reliable connection protocol. This project uses socket programming in order to implement FTP. Sockets can be viewed as the \textit{door} connecting the application and transport layers, as seen in Fig~\ref{socket}. The socket programs which are used to make the protocol use TCP and IP which is beyond the scope of this project and will not be discussed in detail since they belong to the transport and network layers respectively \cite{cn}.
 
 FTP uses a set of commands and protocols in order order to achieve desired outcome, for example, a client has to send a password along with a specific command to the server in order for the input password to be valid. Upon receiving a said command, the server replies with a code number, accompanied by text, that indicates the failure or success of the implementation of said command. 
 
@@ -258,7 +258,7 @@ As mentioned above, FTP is built on TCP/IP. TCP is a transport layer protocol wh
 
 Wireshark, a packet analyser, was also used to capture and monitor the TCP packets when operating the FTP program. This allowed the authors to verify and validate the program by witnessing control messages, reply codes and file data being transferred through the TCP connections.
 
-In order to store passwords and user names, a database needs to be used on the server side. The author opted to use MySQL database because of its security, reliability and scalability \cite{mysql}. The database has a single table which is used to store the user name, user password, and the root directory for the said user wherein the user can perform file transfers on the server side. Due to MySQL using SQL, queries can be easily performed. An example of a useful query would be to find out if the user name, which is used in logging in when using FTP, exists~(see Fig~\ref{qu}). If the user name exists, then the server proceeds to request for the user password,etc.
+In order to store passwords and user names, a database needs to be used on the server side. The authors opted to use MySQL database because of its security, reliability and scalability \cite{mysql}. The database has a single table which is used to store the user name, user password, and the root directory for the said user wherein the user can perform file transfers on the server side. Due to MySQL using SQL, queries can be easily performed. An example of a useful query would be to find out if the user name, which is used in logging in when using FTP, exists~(see Fig~\ref{qu}). If the user name exists, then the server proceeds to request for the user password,etc.
 
 \begin{figure}[hbtp]
 	%\raggedleft
@@ -305,7 +305,7 @@ Databases are useful for storing information. The authors opted to use MySQL dat
 	\label {sqltable}
 \end{figure}
 
-A visual example of this table is shown in Table~\ref{tasks}. The SQL queries that are performed in the authors' FTP  program are performed on this table. Storing the user credentials in a database instead of another storage format was chosen because of the following reasons. Firstly, by storing the data in a database ensures that the data is safely stored regardless of whether the server code is active or not. The use of the database also allows one to easily query data. Based on the authors' experience it was concluded that querying text files, csv files, etc. results in very complex code. Due to the database already using a language~(that is, SQL), the amount of code necessary to perform a query is significantly reduced. Integrating the database with python is also simple. One of the major factors for using a database is that the data can be accessed across the entire server program, whether in functions, modules and/or classes. The benefit of such accessibility is if/when working with multiple python script files, the data can be accessed without having to make provision for passing data between the scripts that may need it. This in turn, results in the server code being easily scalable in terms of having multiple users.
+A visual example of this table is shown in Table~\ref{tasks}. The SQL queries that are performed in the authors' FTP  program are performed on this table. Storing the user credentials in a database instead of another storage format was chosen because of the following reasons. Firstly, by storing the data in a database ensures that the data is safely stored regardless of whether the server code is active or not. The use of the database also allows one to easily query data. Based on the authors' experience it was concluded that querying text files, csv files, etc, results in very complex code. Due to the database already using a language~(that is, SQL), the amount of code necessary to perform a query is significantly reduced. Integrating the database with python is also simple. One of the major factors for using a database is that the data can be accessed across the entire server program, whether in functions, modules and/or classes. The benefit of such accessibility is if/when working with multiple python script files, the data can be accessed without having to make provision for passing data between the scripts that may need it. This in turn, results in the server code being easily scalable in terms of having multiple users.
 
 
 
@@ -347,7 +347,7 @@ When a user enters their \textit{unique} user name, a query that determines whet
 	\label {sqlroot}
 \end{figure}
 
-Fig~\ref{sqlroot} is SQL code that returns a root folder name  for a specified user, the returned user name is used to determine the root directory of said user, as stated above. Fig~\ref{sqlpass} shows the generic SQL code that returns the number of user names where the password entered on the client side matches the one stored in the databases' user table. Due to the fact that the user names of the table always unique, if the number returned by the query is the number one, then it means the password for said user name is correct. If the returned value is zero, then it means that the password is incorrect. It is important to note that the code given in Fig~\ref{sqlpass} is only ever run if the entered user name queried in Fig~\ref{sqluser} exists. Due to this, the entered user name is always correct, and only the password authenticity is tested.
+Fig~\ref{sqlroot} is SQL code that returns a root folder name  for a specified user, the returned user name is used to determine the root directory of said user, as stated above. Fig~\ref{sqlpass} shows the generic SQL code that returns the number of user names where the password entered on the client side matches the one stored in the databases' user table. Due to the fact that the user names of the table are always unique, if the number returned by the query is the number one, then it means the password for said user name is correct. If the returned value is zero, then it means that the password is incorrect. It is important to note that the code given in Fig~\ref{sqlpass} is only ever run if the entered user name queried in Fig~\ref{sqluser} exists. Due to this, the entered user name is always correct, and only the password authenticity is tested.
 
 
 
@@ -514,7 +514,7 @@ The functionality of the commands, reply codes and formatting according to FTP s
 
 
 \section{Code Functionality}
-The client and server programs run on python 3 and user an installed MySQL database. This section gives a brief overview of how the program is used.
+The client and server programs run on python 3 and uses an installed MySQL database. This section gives a brief overview of how the program is used.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Please explain how it instantaniates a connections
 %whether it is for example passive mode or active mode
@@ -575,7 +575,7 @@ Some of the basic commands of FTP were not implemented because they were seen as
 
 \section{Division of Tasks}
 
-Due to the project requiring that a division of tasks be given, the authors opted code one python script each. Uyanda Mphunga implemented the server script and Ashraf Omar implemented the client side.
+Due to the project requiring that a division of tasks be given, the authors opted to code one python script each. Uyanda Mphunga implemented the server script and Ashraf Omar implemented the client side.
 
 \section{Future Improvements}
 
