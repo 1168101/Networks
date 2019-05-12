@@ -215,7 +215,7 @@
 A File Transfer Protocol~(FTP) was designed, implemented and tested by the authors using socket programming in python 3. The purpose of this project is to create a custom FTP protocol in order to fundamentally understand how protocols operate. This document assumes that the reader is familiar with computer networking and the terminology used. This document includes sections on the Design and Implementation, Code Functionality, Testing and Results, SWAT Analysis, Division of Tasks and Future Improvements. 
 
 \section{BACKGROUND}
-FTP is an RFC959 \cite{rfc} standardised file sharing~(or file transferring) protocol that uses separate control and data connections between a client and server\cite{tcp}. Protocols define the rules and format of messages and message transmissions. The transmitted messages in FTP include control messages, which include the commands from the client to the server and response codes from the server to the client, and data messages which is used for file transmission between client and server. The protocol is a fifth layer protocol of the IP stack, the application layer, as seen in Fig~\ref{ipstack}, and is fundamentally a protocol with the intended application of sharing files between hosts~(computer programs, etc.). 
+FTP is an RFC959 \cite{rfc959} standardised file sharing~(or file transferring) protocol that uses separate control and data connections between a client and server\cite{tcp}. Protocols define the rules and format of messages and message transmissions~\cite{cn}. The transmitted messages in FTP include control messages, which include the commands from the client to the server and response codes from the server to the client, and data messages which is used for file transmission between client and server.~\cite{Bin}. The protocol is a fifth layer protocol of the IP stack, the application layer~\cite{gupta}, as seen in Fig~\ref{ipstack}, and is fundamentally a protocol with the intended application of sharing files between hosts~(computer programs, etc).
 
 
 \begin{figure}[hbtp!]
@@ -446,9 +446,39 @@ Algorithm~\ref{clientalg1} shows the high level pseudo-code of how clients inter
 
 
 \subsection{Commands and Reply Codes}
-Table \ref{replycodes} shows the reply codes that the server implemented and the meaning of each code. The codes shown in the table are linked to the commands used by the authors in implementing FTP. The authors opted to implement the minimum commands required to have a functioning FTP program. This was done due to time constraints. The FTP is made to function only in active mode, this was done because according to the authors’ views, allowing a user to connect to a port of their choosing can be problematic (in terms of security) if said ports are already in use by other users. Instead, by allowing the server to automatically dictate the port number to be used, connection error probability is mitigated.
+Table~\ref{commandTable} is a summary of the commands implemented by the authors' FTP program. It should be noted that the port command is specifically implemented in lower case alphabets.
 
-The \texttt{TYPE} and \texttt{MODE} commands were not implemented by the authors for this project due to its perceived redundancy. This is due to the fact that when transmitting a file, whether it is a binary file, text file, etc., the data is transmitted as if it were a binary successfully without having to know what type of file is being transferred. This is possible due to python being a high level language.
+When transmitting files between the client and server, the said files are read and written as binary files by the client and server programs. In python, any file type can be transmitted as binary, whether it be a text file, video, or an image. Due to this fact, the authors did not implement the \texttt{TYPE} and \texttt{MODE} commands due to them being redundant in terms of file transfer. Multiple reply code have been implemented, for each command mentioned on Table~\ref{replycodes}, there is a reply code implemented for it. In the event that a code entered by the user does not exist, the server has also implemented a reply code for it as well. The way the reply codes are used is that whenever a command is received, a reply code is sent back to the client for processing, depending on the said reply code, the server may then proceed to process data. An example of this would be when downloading a file from the server using the \texttt{RETR}, if the said file exists in the user's account, the server first sends the reply code confirming that is exists to the client and then proceeds to transfer the said file to the client.
+
+\begin{table}[hbtp!]
+	\caption{Implemented FTP commands}
+	\label{commandTable}
+	\begin{center}
+		\begin{tabular}{| c | c | c |}
+			\hline
+			Command type &  \textless command value \textgreater & full command\\
+			\hline
+				USER & \textless User name\textgreater& USER   \textless User name \textgreater \\
+			\hline
+				PASS & \textless password \textgreater & PASS   \textless password \textgreater  \\
+			\hline
+				NOOP & - & NOOP \\
+			\hline
+				RETR & \textless file name \textgreater & RETR   \textless file name \textgreater \\
+			\hline
+				STOR & \textless file name \textgreater & STOR   \textless file name \textgreater \\
+			\hline
+				STRU & -  & STRU  \\
+			\hline
+				port & \textless ip and port \textgreater & \textless ip and port \textgreater \\
+			\hline
+				QUIT & -  & QUIT\\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+The functionality of the commands, reply codes and formatting according to FTP standards can be found on reference~\cite{rfc959}.
 
 % Table generated by Excel2LaTeX from sheet 'Sheet1'
 \begin{table}[htbp]
@@ -484,11 +514,34 @@ The \texttt{TYPE} and \texttt{MODE} commands were not implemented by the authors
 
 
 \section{Code Functionality}
+The client and server programs run on python 3 and user an installed MySQL database. This section gives a brief overview of how the program is used.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Please explain how it instantaniates a connections
+%whether it is for example passive mode or active mode
+The FTP is made to function only in active mode, this was done because according to the authors’ views, allowing a user to connect to a port of their choosing can be problematic (in terms of security) if said ports are already in use by other users. Instead, by allowing the server to automatically dictate the port number to be used, connection error probability is mitigated. The user connects to the server by typing in \texttt{port h1,h2,h3,h4,p1,p2}, where \texttt{h1-h4} is the IP address of the server (displayed in the server window) and \texttt{p1} and \texttt{p2} are the control and data ports respectively.
+%%%%%%%%%
 
+After a client connects to the server, the server then requires the user name, then the password. Once these two have been accepted by the server, the user is then free to enter any other commands at the user's discretion. When the user types 'QUIT' or simply disconnect from the server, the server acknowledges said disconnection and continues to run indefinitely while listening for other connections.
 
 
 \section{Testing and Results}
-Wireshark was used to monitor the packets sent and received between two computers, one running the client and the other running the server. The TCP \texttt{SYNACK} messages were clearly visible and clear-text of command codes, reply codes, user names and passwords, and even binary file data were viewed without difficulty.
+Wireshark was used to monitor the packets sent and received between two computers, one running the client and the other running the server. The TCP \texttt{SYNACK} messages were clearly visible and clear-text of command codes, reply codes, user names and passwords, and even binary file data were viewed without difficulty as shown in Figure \ref{Wirename}. Refer to Appendix \ref{appndx} for further images of the Wireshark capture.
+
+\begin{figure*}[hbtp!]
+	\centering
+	\includegraphics[width = 0.9\textwidth]{wireshark3}
+	\caption{Wireshark screen capture showing the clear-text of a username sent to the server}
+	\label{Wirename}
+\end{figure*}
+
+
+We can draw a conclusion from this that FTP is not secure and can easily breached. This is because FTP pre-dates SLL and TLS. As demonstrated, FTP is vulnerable to ``Packet Capture". Some of the other vulnerabilities of FTP are outlined in Reference~\cite{rfc2557} include:
+\begin{itemize}
+	\item Using an open port to steal information
+	\item FTP bounce attack, which is essentially a man in the middle attack which involves using the \texttt{PORT} command to access open ports while transfer is occurring
+	\item Brute force attacks to try and guess IP and port numbers, or username and passwords
+	\item Spoofing attacks in which IP data is falsified
+\end{itemize}
 
 % Include wireshark screenshots
 
@@ -500,15 +553,14 @@ This section provides a SWAT analysis to the FTP program based on what the autho
 Most of the basic FTP commands were successfully implemented. The program is also easily scalable due to its design.
 
 \subsection{Weaknesses}
-Some of the basic features of the program for FTP were not implemented. The program does not make use of a GUI and therefore, cannot interact with FileZilla. 
+Some of the basic features of the program for FTP were not implemented. The program does not make use of a GUI and therefore, cannot interact with FileZilla. It also does not have a \texttt{HELP} command, so it is not very user friendly. Another weakness is that the transferred data of FTP is neither secure nor encrypted and therefore vulnerable to being 'hijacked' by outside sources.
 
 \subsection{Advantages}
 The code is simple to use and the program provides detailed error codes to inform the user what their error is.
 
 
 \subsection{Trade-offs}
-Some of the basic commands of FTP were not implemented because they were seen as redundant, as such, the authors chose to implement less commands and limited functionality in order to have a running code that has less chances of an error. 
-
+Some of the basic commands of FTP were not implemented because they were seen as redundant, as such, the authors chose to implement less commands and limited functionality in order to have a running code that has less chances of an error.
 
 \section{Division of Tasks}
 
@@ -516,17 +568,37 @@ Due to the project requiring that a division of tasks be given, the authors opte
 
 \section{Future Improvements}
 
-For future improvements, a GUI needs to be implemented, and perhaps also allow for the neglected commands to be implemented.
+For future improvements, a GUI needs to be implemented, and perhaps also allow for the neglected commands to be implemented. It would be better if a \texttt{HELP} command were implemented to instruct the user on how to use the program.
 
 \section{Conclusion}
-A file transfer protocol program was successfully written using python 3 socket programming. The FTP program used TCP connections to send control messages, receive reply codes and send and receive files through a data connection. The FTP program uses separate data and control connections as outlined in the RFC959 standard.
+A file transfer protocol program was successfully written using python 3 socket programming. The FTP program used TCP connections to send control messages, receive reply codes and send and receive files through a data connection. The FTP program uses separate data and control connections as outlined in the RFC959 standard. The FTP program met all of the requirements of the project except one, which was to be able to interact with FileZilla. Wireshark was used to monitor the TCP packets being sent/received by the program. It was concluded that FTP is not designed to be secure since messages were able to be seen in plain text in the TCP packets.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %\nocite{*}
 \onecolumn
 \bibliographystyle{IEEEtran}
 \bibliography{networks}
-
+\newpage
+\appendix
+\section{Wireshark Screenshots}
+\label{appndx}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[width = 0.9\textwidth]{wireshark2}
+	\caption{Wireshark screen capture showing the IP addresses of the two hosts}
+	\label{w1}
+\end{figure}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[width = 0.9\textwidth]{wireshark1}
+	\caption{Wireshark screen capture showing the clear-text of a received message}
+\end{figure}
+\begin{figure}[hbtp!]
+	\centering
+	\includegraphics[width = 0.9\textwidth]{wireshark4}
+	\caption{Wireshark screen capture showing the clear-text of a file being transferred through the data connection}
+	\label{w4}
+\end{figure}
 %{\tiny \vfill \hfill \today \hspace{5mm} witseie-paper-2003.\TeX}
 
 \end{document}
