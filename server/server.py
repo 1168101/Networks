@@ -19,43 +19,40 @@ mydb = mysql.connector.connect(
     passwd="heavens1",
     database="networks"
 )
-
+#If the database is connected
 if mydb:
     print('Database Connected.....')
 
-
+#Main function
 def main():
-
-
-    HOST = ''
-    PORT = 12000
-
-    ADDRESS = (HOST,PORT)
-    CODE = 'ascii'
-    server = socket(AF_INET,SOCK_STREAM)
-    IP=getIP()
-    print('HOST address:',IP,' port:',PORT)
-    server.bind(ADDRESS)
-    server.listen(5)
+    HOST = ''   #Use the current IP as host
+    PORT = 12000    #Control port
+    ADDRESS = (HOST,PORT)   #Address for binding
+    CODE = 'ascii'  #FTP default
+    server = socket(AF_INET,SOCK_STREAM) #Create socket obj
+    IP=getIP() #Get the current IP of the computer
+    print('HOST address:',IP,' port:',PORT) #Display info for connecting client
+    server.bind(ADDRESS) #Bind address
+    server.listen(5) #Listen for connections
     print('Waiting for client connection...')
-
+    
     while True:
-        client, address = server.accept()
+        client, address = server.accept() #Accept connection
         print('Connected from: ', address)
-        handler = myThread(client)
+        handler = myThread(client) #Create a thread for each client
         handler.start()
-
+#Function for getting IP address
 def getIP():
     s = socket(AF_INET,SOCK_DGRAM)
     try:
-        s.connect(('10.255.255.255', 1))
-        IP = s.getsockname()[0]
+        s.connect(('10.255.255.255', 1)) #Connect to IANA
+        IP = s.getsockname()[0] #Get IP
     except:
-        IP = '127.0.0.1'
+        IP = '127.0.0.1' #Default
     finally:
-        s.close()
+        s.close() #Disconnect from IANA
     return IP
-
+#Function for creating threads and running them
 class myThread (Thread):
     def __init__(self, client):
         Thread.__init__(self)
@@ -63,12 +60,7 @@ class myThread (Thread):
     def run(self):
         self.client.send(bytes('Welcome user','ascii'))
         clientHandler (self.client)
-
-
-
-
-
-
+#Function for handling commands received from client
 def clientHandler (client):
     isUsername = False
     username = ''
@@ -79,8 +71,6 @@ def clientHandler (client):
     fileType = 'rb'
     while True:
         message = decode(client.recv(BUFFERSIZE), 'ascii')
-
-
         print('Received message is', message)
         if not message:
             print('Client disconnected')
@@ -102,15 +92,12 @@ def clientHandler (client):
                     print('current working directory ', rootName)
             elif isUsername == True and isPassword == True:
                 processCommand(client, commandType, commandValue, username, password, rootName, fileType)
-
-            #processCommand(client, commandType, commandValue)
-
+#Capitalises commands.
 def acceptCommand(command):
     commandType = command[0:4]
     return commandType.upper()
-    #print('first four ', comandType)
     client.send(bytes(command.upper(),'ascii'))
-
+#Function for splitting messages into command and argument. 
 def extractValue(command):
     commandValue = ''
 
@@ -122,7 +109,7 @@ def extractValue(command):
         return commandValue
 
 
-
+#Function for checking username
 def userNameConfirmation(client, commandType, commandValue):
     if commandType != 'USER':
         client.send(bytes('530 Enter user name','ascii'))
@@ -139,7 +126,7 @@ def userNameConfirmation(client, commandType, commandValue):
         elif result[0][0] == 1:
             client.send(bytes('331 User name accepted, please enter your password','ascii'))
             return True
-
+#Function for checking password
 def passwordConfirmation(client, commandType, commandValue, username):
 
     if commandType != 'PASS':
@@ -159,14 +146,14 @@ def passwordConfirmation(client, commandType, commandValue, username):
         elif result[0][0] == 1:
             client.send(bytes('230 User logged in, proceed.','ascii'))
             return True
-
+#Check db for root folder
 def rootNamer(username):
     cursor = mydb.cursor()
     sql = "select root from user where name = '%s'" % (username)
     cursor.execute(sql)
     result = cursor.fetchone()
     return result[0]
-
+#Switch for various commands
 def processCommand(client, commandType, commandValue, username, password, rootName, fileType):
     message = commandType + ' ' + commandValue
     if commandType == 'NOOP':
@@ -180,7 +167,6 @@ def processCommand(client, commandType, commandValue, username, password, rootNa
             #print(os.getcwd() + os.sep + rootName +os.sep +commandValue,'does not exist')
             client.send(bytes('450 file not found', 'ascii'))
     elif commandType == 'STOR':
-        #client.send(bytes('502 command not implemented','ascii'))
         client.send(bytes('150 File status okay; about to open data connection.','ascii'))
         clientIP = client.getpeername()[0]
         receiveFile(rootName, commandValue, fileType,clientIP)
@@ -192,17 +178,13 @@ def processCommand(client, commandType, commandValue, username, password, rootNa
         client.send(bytes('502 command not implemented','ascii'))
 
 
-
+#Function for RETR command
 def transferFile(dirName, fileName, fileType,clientIP):
     HOST = clientIP
     PORT = 13000
     BUFFERSIZE = 1024
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    #server = socket(AF_INET,SOCK_STREAM)
-    #server.bind(ADDRESS)
-    #server.listen(5)
-    #client, address = server.accept()
     client = socket(AF_INET,SOCK_STREAM)
     client.connect(ADDRESS)
     theFile = dirName + os.sep + fileName
@@ -217,7 +199,7 @@ def transferFile(dirName, fileName, fileType,clientIP):
             f.close()
             client.close()
             break
-
+#Function for STRU
 def fileStructure(rootName,clientIP):
 
     HOST = clientIP
@@ -225,12 +207,8 @@ def fileStructure(rootName,clientIP):
     BUFFERSIZE = 1024
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    #server = socket(AF_INET,SOCK_STREAM)
     client = socket(AF_INET,SOCK_STREAM)
     client.connect(ADDRESS)
-    #server.bind(ADDRESS)
-    #server.listen(5)
-    #client, address = server.accept()
 
     for root, dirs, files in os.walk("." + os.sep + rootName):
         for filename in files:
@@ -239,17 +217,13 @@ def fileStructure(rootName,clientIP):
     client.close()
 
 
-
+#Function for STOR
 def receiveFile(dirName, fileName, fileType,clientIP):
     HOST = clientIP
     PORT = 15000
 
     ADDRESS = (HOST,PORT)
     CODE = 'ascii'
-    #server = socket(AF_INET,SOCK_STREAM)
-    #server.bind(ADDRESS)
-    #server.listen(5)
-    #client, address = server.accept()
     client = socket(AF_INET,SOCK_STREAM)
     client.connect(ADDRESS)
     theUser = os.getcwd() + os.sep + dirName + os.sep + fileName
@@ -264,6 +238,6 @@ def receiveFile(dirName, fileName, fileType,clientIP):
         	f.write(data)
         print('file received')
 
-
+#Run Main function
 if __name__ == '__main__':
     main()

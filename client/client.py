@@ -6,13 +6,11 @@ import os, os.path
 import time
 
 
-
+#Main Function
 def main():
-	HOST = 'localhost'
 	PORT = 12000
 	BUFFERSIZE = 1024
-	#ADDRESS = (HOST,PORT)
-	ADDRESS = connectionHandler()
+	ADDRESS = connectionHandler() #Get IP info from PORT command
 	CODE = 'ascii'
 	fileType = 'wb'
 	user = False
@@ -20,7 +18,7 @@ def main():
 	server.connect(ADDRESS)
 	print(decode(server.recv(BUFFERSIZE),CODE))
 	serverHandler(server, CODE, BUFFERSIZE, fileType)
-
+#Function for PORT command. QUIT also works here.
 def connectionHandler():
 	while True:
 		command = input('Enter PORT information: \n')
@@ -28,17 +26,17 @@ def connectionHandler():
 			command = input('Enter valid PORT command: \n')
 		commandType = command[0:4]
 		commandValue = extractValue(command)
-		if command == 'quit':
+		if command == 'quit' or command=='QUIT':
 			break
-		if commandType == 'port':
-			h1,h2,h3,h4,p1,p2 = commandValue.split(',')
+		if commandType == 'port' or command=='PORT':
+			h1,h2,h3,h4,p1,p2 = commandValue.split(',') #FTP standard for PORT
 			PORT1 = int(p1)
 			PORT2 = int(p2)
 			HOST = h1 + '.' + h2 + '.' + h3 + '.' + h4
 			ADDRESS = (HOST,PORT1)
 			return ADDRESS
 			break
-
+#Function for inputting commands after connection
 def serverHandler(server, CODE, BUFFERSIZE, fileType):
 	while True:
 
@@ -51,13 +49,13 @@ def serverHandler(server, CODE, BUFFERSIZE, fileType):
 			command = input('Enter valid command: \n')
 
 
-		if command == 'quit':
+		if command == 'quit' or command=='QUIT':
 			server.close()
 			break
 		responseHandler(server, command, CODE, BUFFERSIZE, fileType)
 
 
-
+#Switch for various commands
 def responseHandler(server, command, CODE, BUFFERSIZE, fileType):
 	server.send(bytes(command, CODE))
 	response = decode(server.recv(BUFFERSIZE),CODE)
@@ -94,21 +92,19 @@ def responseHandler(server, command, CODE, BUFFERSIZE, fileType):
 		fileStructure()
 
 
-
+#Function for RETR
 def receiveFile(fileName, fileType, BUFFERSIZE):
 	HOST = ''
 	PORT = 13000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
 	server = socket(AF_INET, SOCK_STREAM)
-	#server.connect(ADDRESS)
 	server.bind(ADDRESS)
 	server.listen(5)
 	client,address = server.accept()
 	with open(fileName, 'wb') as f:
 
 		while True:
-			#data = server.recv(BUFFERSIZE)
 			data = client.recv(BUFFERSIZE)
 			if not data:
 				f.close()
@@ -116,14 +112,13 @@ def receiveFile(fileName, fileType, BUFFERSIZE):
 			f.write(data)
 		print('file received')
 
-
+#Function for STOR
 def transferFile(fileName, fileType, BUFFERSIZE):
 	HOST = ''
 	PORT = 15000
 	BUFFERSIZE = 1024
 	ADDRESS = (HOST,PORT)
 	server = socket(AF_INET, SOCK_STREAM)
-	#server.connect(ADDRESS)
 	server.bind(ADDRESS)
 	server.listen(5)
 	client,address = server.accept()
@@ -139,7 +134,7 @@ def transferFile(fileName, fileType, BUFFERSIZE):
 	        client.close()
 	        break
 	print('sent ')
-
+#Function for splitting command and argument
 def extractValue(command):
     commandValue = ''
 
@@ -149,7 +144,7 @@ def extractValue(command):
         return commandValue
     else:
         return commandValue
-
+#Function for STRU
 def fileStructure():
 	HOST = ''
 	PORT = 14000
@@ -171,6 +166,6 @@ def fileStructure():
 		recvd_data.append(data)
 
 	print('File structure\n', recvd_data)
-
+#Run MAIN
 if __name__ == '__main__':
     main()
